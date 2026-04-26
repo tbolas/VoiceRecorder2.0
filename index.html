@@ -1,662 +1,125 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoiceRecorder 2.0</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f4f6f9;
-    color: #1a1a2e;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    padding: 36px 40px;
-    width: 100%;
-    max-width: 640px;
-  }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  .subtitle { font-size: 13px; color: #888; margin-bottom: 28px; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  .field { margin-bottom: 16px; }
-  label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
-  input[type="text"], input[type="tel"] {
-    width: 100%; padding: 10px 14px;
-    border: 1.5px solid #ddd; border-radius: 8px;
-    font-size: 15px; outline: none; transition: border-color 0.2s;
-  }
-  input:focus { border-color: #4f8ef7; }
-  .meta-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .badge { background: #eef3ff; color: #4f8ef7; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
-  .badge.value { background: #e8f5e9; color: #388e3c; }
-  .text-box {
-    background: #f8f9fc; border: 1.5px solid #e8eaf0; border-radius: 10px;
-    padding: 16px 18px; font-size: 16px; line-height: 1.7;
-    margin-bottom: 22px; min-height: 80px;
-  }
-  .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
-  .btn-record {
-    width: 56px; height: 56px; border-radius: 50%; border: none;
-    background: #e53935; color: #fff; font-size: 22px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: background 0.2s;
-  }
-  .btn-record:hover { background: #c62828; }
-  .btn-record.recording { background: #b71c1c; animation: pulse 1.2s infinite; }
-  .btn-record:disabled { background: #ccc; cursor: not-allowed; animation: none; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); }
-    50% { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
-  }
-  .timer { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-  .status-label { font-size: 13px; color: #888; margin-top: 2px; }
-  audio { width: 100%; margin-bottom: 16px; border-radius: 8px; display: none; }
-  .btn {
-    padding: 11px 24px; border-radius: 8px; font-size: 15px;
-    font-weight: 500; border: none; cursor: pointer; transition: background 0.15s;
-  }
-  .btn-primary { background: #4f8ef7; color: #fff; }
-  .btn-primary:hover { background: #2e74e8; }
-  .btn-primary:disabled { background: #b0c7f7; cursor: not-allowed; }
-  .btn-secondary { background: #f0f2f5; color: #444; }
-  .btn-secondary:hover { background: #e2e5ea; }
-  .btn-full { width: 100%; margin-top: 8px; }
-  .action-row { display: flex; gap: 10px; }
-  #done-panel { text-align: center; }
-  .done-icon { font-size: 48px; margin-bottom: 12px; }
-  .done-text { font-size: 17px; color: #444; margin-bottom: 24px; }
-  #toast {
-    position: fixed; bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #1a1a2e; color: #fff; padding: 12px 24px;
-    border-radius: 8px; font-size: 14px; transition: transform 0.3s;
-    z-index: 999; white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-  #toast.error { background: #c62828; }
-</style>
-</head>
-<body>
-<div class="card">
-  <h1>VoiceRecorder 2.0</h1>
-  <p class="subtitle">Kirundi Audio Collection</p>
+const SHEET_ID = '1sX_-P3Co1h1y1miOnAWKv7SS5Rvl2_-s9_On9bUpA6A';
+const DRIVE_FOLDER_NAME = 'VoiceRecorder2.0';
 
-  <div id="setup-panel" class="panel active">
-    <div class="field">
-      <label>Your Name</label>
-      <input type="text" id="user-name" placeholder="e.g. Jean Pierre" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Lumicash Number</label>
-      <input type="tel" id="lumicash" placeholder="e.g. 0799000000" autocomplete="off">
-    </div>
-    <button class="btn btn-primary btn-full" onclick="startSession()">Start Recording</button>
-  </div>
+function doGet(e) {
+  var callback = e.parameter.callback;
+  var action = e.parameter.action;
+  var result;
 
-  <div id="record-panel" class="panel">
-    <div class="meta-row">
-      <span class="badge" id="meta-volume"></span>
-      <span class="badge" id="meta-number"></span>
-      <span class="badge value" id="meta-value"></span>
-    </div>
-    <div class="text-box" id="text-display">Loading...</div>
-    <div class="controls">
-      <button class="btn-record" id="rec-btn" onclick="toggleRecord()">&#9679;</button>
-      <div>
-        <div class="timer" id="timer">0:00</div>
-        <div class="status-label" id="status-label">Press to record</div>
-      </div>
-    </div>
-    <audio id="audio-preview" controls></audio>
-    <div class="action-row">
-      <button class="btn btn-primary" id="submit-btn" onclick="submitRecording()" disabled>Submit</button>
-      <button class="btn btn-secondary" id="discard-btn" onclick="discardRecording()">Discard &amp; Re-record</button>
-    </div>
-  </div>
-
-  <div id="done-panel" class="panel">
-    <div class="done-icon">&#9989;</div>
-    <div class="done-text" id="done-msg">Saved successfully!</div>
-    <button class="btn btn-primary" onclick="loadNextItem()">Next Recording</button>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
-<script>
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyhYeoRSawkpqczzh4qz-D8PmS4gGaKL0McuI6JSG0yoHx6EJZOBGSLi5av1Xgcqysrg/exec';
-
-var userData = {};
-var currentItem = null;
-var mp3Chunks = [];
-var audioBlob = null;
-var isRecording = false;
-var timerInterval = null;
-var seconds = 0;
-var audioContext, mediaStream, scriptProcessor, mp3Encoder;
-
-// ── JSONP ──────────────────────────────────────────────────────────────────────
-function jsonp(url) {
-  return new Promise(function(resolve, reject) {
-    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    var script = document.createElement('script');
-    script.src = url + '&callback=' + cbName;
-    script.onerror = function() { cleanup(); reject(new Error('JSONP error')); };
-    window[cbName] = function(data) { cleanup(); resolve(data); };
-    function cleanup() {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+  try {
+    if (action === 'getNextItem') {
+      result = getNextItem();
+    } else {
+      result = { error: 'Unknown action: ' + action };
     }
-    document.head.appendChild(script);
-  });
+  } catch (err) {
+    result = { error: err.toString() };
+  }
+
+  var output = JSON.stringify(result);
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + output + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── UI ─────────────────────────────────────────────────────────────────────────
-function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+function doPost(e) {
+  var output = ContentService.createTextOutput('ok');
+  output.setMimeType(ContentService.MimeType.TEXT);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    if (data.action === 'submit') saveRecording(data);
+  } catch(err) {}
+  return output;
 }
 
-function showToast(msg, isError) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show' + (isError ? ' error' : '');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.className = ''; }, 3500);
-}
-
-// ── Session ────────────────────────────────────────────────────────────────────
-function startSession() {
-  var name = document.getElementById('user-name').value.trim();
-  var lumi = document.getElementById('lumicash').value.trim();
-  if (!name || !lumi) { showToast('Please fill in your name and Lumicash number.', true); return; }
-  userData = { user: name, lumicash: lumi };
-  loadNextItem();
-}
-
-// ── Load next item ─────────────────────────────────────────────────────────────
-function loadNextItem() {
-  showPanel('record-panel');
-  document.getElementById('text-display').textContent = 'Loading...';
-  resetRecorder();
-
-  jsonp(APPS_SCRIPT_URL + '?action=getNextItem').then(function(item) {
-    if (!item || item.done || item.error) {
-      showPanel('done-panel');
-      document.getElementById('done-msg').textContent = (item && item.error)
-        ? 'Error: ' + item.error
-        : 'All done - no more items available.';
-      document.querySelector('#done-panel .btn').style.display = 'none';
-      return;
+function getNextItem() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName('ToRecord');
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][3]).toLowerCase() === 'available') {
+      sheet.getRange(i + 1, 4).setValue('Pending');
+      return {
+        row: i + 1,
+        volume: String(data[i][0]),
+        number: String(data[i][1]),
+        text: String(data[i][2]),
+        value: data[i][4]
+      };
     }
-    currentItem = item;
-    document.getElementById('meta-volume').textContent = item.volume;
-    document.getElementById('meta-number').textContent = '#' + item.number;
-    document.getElementById('meta-value').textContent = item.value + ' BIF';
-    document.getElementById('text-display').textContent = item.text;
-  }).catch(function(err) {
-    showToast('Failed to load: ' + err.message, true);
-    document.getElementById('text-display').textContent = 'Error loading item.';
-  });
+  }
+  return { done: true };
 }
 
-// ── Recorder ───────────────────────────────────────────────────────────────────
-function resetRecorder() {
-  if (isRecording) { try { stopRecording(); } catch(e) {} }
-  mp3Chunks = [];
-  audioBlob = null;
-  isRecording = false;
-  seconds = 0;
-  clearInterval(timerInterval);
-  document.getElementById('timer').textContent = '0:00';
-  document.getElementById('status-label').textContent = 'Press to record';
-  document.getElementById('rec-btn').classList.remove('recording');
-  document.getElementById('rec-btn').disabled = false;
-  document.getElementById('submit-btn').disabled = true;
-  document.getElementById('submit-btn').textContent = 'Submit';
-  document.getElementById('discard-btn').disabled = false;
-  var ap = document.getElementById('audio-preview');
-  ap.src = '';
-  ap.style.display = 'none';
+function saveRecording(data) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var toRecordSheet = ss.getSheetByName('ToRecord');
+
+  var now = new Date();
+  var ts = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
+  var tsDisplay = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  var safeName = data.volume + '_' + data.number + '_' + data.user + '_' + ts;
+
+  var folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+
+  // Save audio - identical to 1.0
+  var byteString = Utilities.base64Decode(data.dataURI.split(',')[1]);
+  var mimeString = data.dataURI.split(',')[0].split(':')[1].split(';')[0];
+  var blob = Utilities.newBlob(byteString, mimeString);
+  blob.setName(safeName + '.mp3');
+  var audioFile = folder.createFile(blob);
+  var mp3Link = audioFile.getUrl();
+
+  // Save TXT
+  folder.createFile(Utilities.newBlob(data.text, 'text/plain', safeName + '.txt'));
+
+  // Mark Done
+  toRecordSheet.getRange(Number(data.row), 4).setValue('Done');
+
+  // Append to Audit
+  var auditSheet = ss.getSheetByName('Audit');
+  if (!auditSheet) {
+    auditSheet = ss.insertSheet('Audit');
+    auditSheet.appendRow(['Volume', 'Number', 'Text', 'Value', 'User', 'Lumicash', 'TimeComplete', 'MP3Link']);
+  }
+  auditSheet.appendRow([
+    data.volume, data.number, data.text, data.value,
+    data.user, data.lumicash, tsDisplay, mp3Link
+  ]);
+
+  // Update Payment
+  updatePayment(ss, data.user, data.lumicash);
 }
 
-function discardRecording() { resetRecorder(); }
-
-function toggleRecord() {
-  if (!isRecording) { startRecording(); } else { stopRecording(); }
-}
-
-function startRecording() {
-  mp3Chunks = [];
-  document.getElementById('audio-preview').style.display = 'none';
-  document.getElementById('submit-btn').disabled = true;
-
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream) {
-    mediaStream = stream;
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContext.resume();
-    var targetRate = 44100;
-    mp3Encoder = new lamejs.Mp3Encoder(1, targetRate, 128);
-    var source = audioContext.createMediaStreamSource(stream);
-    scriptProcessor = audioContext.createScriptProcessor(16384, 1, 1);
-    scriptProcessor.onaudioprocess = function(e) {
-      if (!isRecording) return;
-      var samples = e.inputBuffer.getChannelData(0);
-      var int16 = new Int16Array(samples.length);
-      for (var i = 0; i < samples.length; i++) {
-        int16[i] = Math.max(-32768, Math.min(32767, samples[i] * 32768));
-      }
-      var encoded = mp3Encoder.encodeBuffer(int16);
-      if (encoded.length > 0) mp3Chunks.push(encoded);
-    };
-    source.connect(scriptProcessor);
-    scriptProcessor.connect(audioContext.destination);
-    isRecording = true;
-    document.getElementById('rec-btn').classList.add('recording');
-    document.getElementById('status-label').textContent = 'Recording...';
-    seconds = 0;
-    timerInterval = setInterval(function() {
-      seconds++;
-      var m = Math.floor(seconds / 60);
-      var s = String(seconds % 60).padStart(2, '0');
-      document.getElementById('timer').textContent = m + ':' + s;
-    }, 1000);
-  }).catch(function(err) {
-    var msg = 'Microphone access denied.';
-    if (err.name === 'NotFoundError') msg = 'No microphone found on this device.';
-    showToast(msg, true);
-  });
-}
-
-function stopRecording() {
-  isRecording = false;
-  clearInterval(timerInterval);
-  document.getElementById('rec-btn').classList.remove('recording');
-  document.getElementById('status-label').textContent = 'Review & submit';
-  if (scriptProcessor) scriptProcessor.disconnect();
-  if (mediaStream) mediaStream.getTracks().forEach(function(t) { t.stop(); });
-  if (audioContext) audioContext.close();
-  var final = mp3Encoder.flush();
-  if (final.length > 0) mp3Chunks.push(final);
-  audioBlob = new Blob(mp3Chunks, { type: 'audio/mp3' });
-  var url = URL.createObjectURL(audioBlob);
-  var ap = document.getElementById('audio-preview');
-  ap.src = url;
-  ap.style.display = 'block';
-  document.getElementById('submit-btn').disabled = false;
-}
-
-// ── Submit ─────────────────────────────────────────────────────────────────────
-function submitRecording() {
-  if (!audioBlob || mp3Chunks.length === 0) { showToast('No recording found.', true); return; }
-
-  document.getElementById('submit-btn').disabled = true;
-  document.getElementById('discard-btn').disabled = true;
-  document.getElementById('submit-btn').textContent = 'Uploading...';
-  showToast('Uploading, please wait...');
-
-  var reader = new FileReader();
-  reader.onloadend = function() {
-    var payload = {
-      action: 'saveRecording',
-      row: currentItem.row,
-      volume: currentItem.volume,
-      number: currentItem.number,
-      text: currentItem.text,
-      value: currentItem.value,
-      user: userData.user,
-      lumicash: userData.lumicash,
-      dataURI: reader.result
-    };
-
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    }).then(function() {
-      document.getElementById('discard-btn').disabled = false;
-      showPanel('done-panel');
-      document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
-      document.querySelector('#done-panel .btn').style.display = 'inline-block';
-    }).catch(function(err) {
-      showToast('Upload failed: ' + err.message, true);
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('submit-btn').textContent = 'Submit';
-      document.getElementById('discard-btn').disabled = false;
-    });
-  };
-  reader.onerror = function() {
-    showToast('Failed to read audio.', true);
-    document.getElementById('submit-btn').disabled = false;
-    document.getElementById('submit-btn').textContent = 'Submit';
-    document.getElementById('discard-btn').disabled = false;
-  };
-  reader.readAsDataURL(audioBlob);
-}
-
-window.addEventListener('beforeunload', function(e) {
-  if (document.getElementById('submit-btn').textContent === 'Uploading...') {
-    var msg = 'Upload in progress. Please keep this tab open.';
-    e.preventDefault();
-    e.returnValue = msg;
-    return msg;
+function updatePayment(ss, user, lumicash) {
+  var paySheet = ss.getSheetByName('Payment');
+  if (!paySheet) {
+    paySheet = ss.insertSheet('Payment');
+    paySheet.appendRow(['User', 'Lumicash', 'Total Earned', 'Total Paid', 'Total Owed']);
   }
-});
-</script>
-</body>
-</html>  }
-  input:focus { border-color: #4f8ef7; }
-  .meta-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .badge { background: #eef3ff; color: #4f8ef7; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
-  .badge.value { background: #e8f5e9; color: #388e3c; }
-  .text-box {
-    background: #f8f9fc; border: 1.5px solid #e8eaf0; border-radius: 10px;
-    padding: 16px 18px; font-size: 16px; line-height: 1.7;
-    margin-bottom: 22px; min-height: 80px;
-  }
-  .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
-  .btn-record {
-    width: 56px; height: 56px; border-radius: 50%; border: none;
-    background: #e53935; color: #fff; font-size: 22px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: background 0.2s;
-  }
-  .btn-record:hover { background: #c62828; }
-  .btn-record.recording { background: #b71c1c; animation: pulse 1.2s infinite; }
-  .btn-record:disabled { background: #ccc; cursor: not-allowed; animation: none; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); }
-    50% { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
-  }
-  .timer { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-  .status-label { font-size: 13px; color: #888; margin-top: 2px; }
-  audio { width: 100%; margin-bottom: 16px; border-radius: 8px; display: none; }
-  .btn {
-    padding: 11px 24px; border-radius: 8px; font-size: 15px;
-    font-weight: 500; border: none; cursor: pointer; transition: background 0.15s;
-  }
-  .btn-primary { background: #4f8ef7; color: #fff; }
-  .btn-primary:hover { background: #2e74e8; }
-  .btn-primary:disabled { background: #b0c7f7; cursor: not-allowed; }
-  .btn-secondary { background: #f0f2f5; color: #444; }
-  .btn-secondary:hover { background: #e2e5ea; }
-  .btn-full { width: 100%; margin-top: 8px; }
-  .action-row { display: flex; gap: 10px; }
-  #done-panel { text-align: center; }
-  .done-icon { font-size: 48px; margin-bottom: 12px; }
-  .done-text { font-size: 17px; color: #444; margin-bottom: 24px; }
-  #toast {
-    position: fixed; bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #1a1a2e; color: #fff; padding: 12px 24px;
-    border-radius: 8px; font-size: 14px; transition: transform 0.3s;
-    z-index: 999; white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-  #toast.error { background: #c62828; }
-</style>
-</head>
-<body>
-<div class="card">
-  <h1>VoiceRecorder 2.0</h1>
-  <p class="subtitle">Kirundi Audio Collection</p>
 
-  <div id="setup-panel" class="panel active">
-    <div class="field">
-      <label>Your Name</label>
-      <input type="text" id="user-name" placeholder="e.g. Jean Pierre" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Lumicash Number</label>
-      <input type="tel" id="lumicash" placeholder="e.g. 0799000000" autocomplete="off">
-    </div>
-    <button class="btn btn-primary btn-full" onclick="startSession()">Start Recording</button>
-  </div>
-
-  <div id="record-panel" class="panel">
-    <div class="meta-row">
-      <span class="badge" id="meta-volume"></span>
-      <span class="badge" id="meta-number"></span>
-      <span class="badge value" id="meta-value"></span>
-    </div>
-    <div class="text-box" id="text-display">Loading...</div>
-    <div class="controls">
-      <button class="btn-record" id="rec-btn" onclick="toggleRecord()">&#9679;</button>
-      <div>
-        <div class="timer" id="timer">0:00</div>
-        <div class="status-label" id="status-label">Press to record</div>
-      </div>
-    </div>
-    <audio id="audio-preview" controls></audio>
-    <div class="action-row">
-      <button class="btn btn-primary" id="submit-btn" onclick="submitRecording()" disabled>Submit</button>
-      <button class="btn btn-secondary" id="discard-btn" onclick="discardRecording()">Discard &amp; Re-record</button>
-    </div>
-  </div>
-
-  <div id="done-panel" class="panel">
-    <div class="done-icon">&#9989;</div>
-    <div class="done-text" id="done-msg">Saved successfully!</div>
-    <button class="btn btn-primary" onclick="loadNextItem()">Next Recording</button>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script>
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyhYeoRSawkpqczzh4qz-D8PmS4gGaKL0McuI6JSG0yoHx6EJZOBGSLi5av1Xgcqysrg/exec';
-
-var userData = {};
-var currentItem = null;
-var mediaRecorder = null;
-var audioChunks = [];
-var audioBlob = null;
-var timerInterval = null;
-var seconds = 0;
-var isRecording = false;
-
-// ── JSONP ──────────────────────────────────────────────────────────────────────
-function jsonp(url) {
-  return new Promise(function(resolve, reject) {
-    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    var script = document.createElement('script');
-    script.src = url + '&callback=' + cbName;
-    script.onerror = function() {
-      cleanup();
-      reject(new Error('JSONP error'));
-    };
-    window[cbName] = function(data) {
-      cleanup();
-      resolve(data);
-    };
-    function cleanup() {
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+  var auditData = ss.getSheetByName('Audit').getDataRange().getValues();
+  var totalEarned = 0;
+  for (var i = 1; i < auditData.length; i++) {
+    if (String(auditData[i][4]) === String(user)) {
+      totalEarned += Number(auditData[i][3]) || 0;
     }
-    document.head.appendChild(script);
-  });
-}
-
-// ── UI ─────────────────────────────────────────────────────────────────────────
-function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
-}
-
-function showToast(msg, isError) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show' + (isError ? ' error' : '');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.className = ''; }, 3500);
-}
-
-// ── Session ────────────────────────────────────────────────────────────────────
-function startSession() {
-  var name = document.getElementById('user-name').value.trim();
-  var lumi = document.getElementById('lumicash').value.trim();
-  if (!name || !lumi) { showToast('Please fill in your name and Lumicash number.', true); return; }
-  userData = { user: name, lumicash: lumi };
-  loadNextItem();
-}
-
-// ── Load next item ─────────────────────────────────────────────────────────────
-function loadNextItem() {
-  showPanel('record-panel');
-  document.getElementById('text-display').textContent = 'Loading...';
-  resetRecorder();
-
-  jsonp(APPS_SCRIPT_URL + '?action=getNextItem').then(function(item) {
-    if (!item || item.done || item.error) {
-      showPanel('done-panel');
-      document.getElementById('done-msg').textContent = (item && item.error)
-        ? 'Error: ' + item.error
-        : 'All done - no more items available.';
-      document.querySelector('#done-panel .btn').style.display = 'none';
-      return;
-    }
-    currentItem = item;
-    document.getElementById('meta-volume').textContent = item.volume;
-    document.getElementById('meta-number').textContent = '#' + item.number;
-    document.getElementById('meta-value').textContent = item.value + ' BIF';
-    document.getElementById('text-display').textContent = item.text;
-  }).catch(function(err) {
-    showToast('Failed to load: ' + err.message, true);
-    document.getElementById('text-display').textContent = 'Error loading item.';
-  });
-}
-
-// ── Recorder ───────────────────────────────────────────────────────────────────
-function resetRecorder() {
-  if (mediaRecorder && isRecording) { try { mediaRecorder.stop(); } catch(e) {} }
-  audioBlob = null;
-  audioChunks = [];
-  isRecording = false;
-  seconds = 0;
-  clearInterval(timerInterval);
-  document.getElementById('timer').textContent = '0:00';
-  document.getElementById('status-label').textContent = 'Press to record';
-  document.getElementById('rec-btn').classList.remove('recording');
-  document.getElementById('rec-btn').disabled = false;
-  document.getElementById('submit-btn').disabled = true;
-  document.getElementById('submit-btn').textContent = 'Submit';
-  var ap = document.getElementById('audio-preview');
-  ap.src = '';
-  ap.style.display = 'none';
-}
-
-function discardRecording() { resetRecorder(); }
-
-function toggleRecord() {
-  if (isRecording) { mediaRecorder.stop(); return; }
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-    audioChunks = [];
-    var mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
-                 : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
-    mediaRecorder = mimeType
-      ? new MediaRecorder(stream, { mimeType: mimeType })
-      : new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = function(e) {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-    mediaRecorder.onstop = function() {
-      stream.getTracks().forEach(function(t) { t.stop(); });
-      audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
-      var url = URL.createObjectURL(audioBlob);
-      var ap = document.getElementById('audio-preview');
-      ap.src = url;
-      ap.style.display = 'block';
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('status-label').textContent = 'Review & submit';
-      isRecording = false;
-      clearInterval(timerInterval);
-      document.getElementById('rec-btn').classList.remove('recording');
-    };
-    mediaRecorder.start();
-    isRecording = true;
-    seconds = 0;
-    document.getElementById('rec-btn').classList.add('recording');
-    document.getElementById('status-label').textContent = 'Recording...';
-    timerInterval = setInterval(function() {
-      seconds++;
-      var m = Math.floor(seconds / 60);
-      var s = String(seconds % 60).padStart(2, '0');
-      document.getElementById('timer').textContent = m + ':' + s;
-    }, 1000);
-  }).catch(function(err) {
-    showToast('Microphone access denied. Please allow microphone and reload.', true);
-  });
-}
-
-// ── Submit — waits for upload to complete before showing done ──────────────────
-function submitRecording() {
-  if (!audioBlob) { showToast('No recording found.', true); return; }
-
-  document.getElementById('submit-btn').disabled = true;
-  document.getElementById('discard-btn').disabled = true;
-  document.getElementById('submit-btn').textContent = 'Uploading...';
-  showToast('Uploading, please wait...');
-
-  var reader = new FileReader();
-  reader.onloadend = function() {
-    var payload = {
-      action: 'saveRecording',
-      row: currentItem.row,
-      volume: currentItem.volume,
-      number: currentItem.number,
-      text: currentItem.text,
-      value: currentItem.value,
-      user: userData.user,
-      lumicash: userData.lumicash,
-      dataURI: reader.result
-    };
-
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    }).then(function() {
-      document.getElementById('discard-btn').disabled = false;
-      showPanel('done-panel');
-      document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
-      document.querySelector('#done-panel .btn').style.display = 'inline-block';
-    }).catch(function(err) {
-      showToast('Upload failed: ' + err.message, true);
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('submit-btn').textContent = 'Submit';
-      document.getElementById('discard-btn').disabled = false;
-    });
-  };
-  reader.onerror = function() {
-    showToast('Failed to read audio.', true);
-    document.getElementById('submit-btn').disabled = false;
-    document.getElementById('submit-btn').textContent = 'Submit';
-    document.getElementById('discard-btn').disabled = false;
-  };
-  reader.readAsDataURL(audioBlob);
-}
-
-window.addEventListener('beforeunload', function(e) {
-  if (document.getElementById('submit-btn').textContent === 'Uploading...') {
-    var msg = 'Upload in progress. Please keep this tab open.';
-    e.preventDefault();
-    e.returnValue = msg;
-    return msg;
   }
-});
-</script>
-</body>
-</html>
+
+  var payData = paySheet.getDataRange().getValues();
+  var userRow = -1;
+  for (var i = 1; i < payData.length; i++) {
+    if (String(payData[i][0]) === String(user)) { userRow = i + 1; break; }
+  }
+
+  if (userRow === -1) {
+    paySheet.appendRow([user, lumicash, totalEarned, 0, totalEarned]);
+  } else {
+    var totalPaid = Number(payData[userRow - 1][3]) || 0;
+    paySheet.getRange(userRow, 2).setValue(lumicash);
+    paySheet.getRange(userRow, 3).setValue(totalEarned);
+    paySheet.getRange(userRow, 5).setValue(totalEarned - totalPaid);
+  }
+}
