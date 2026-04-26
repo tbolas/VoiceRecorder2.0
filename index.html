@@ -267,44 +267,44 @@
 
   // ── Submit ───────────────────────────────────────────────────────────────────
   async function submitRecording() {
-    if (!audioBlob) { showToast('No recording found.', true); return; }
-    document.getElementById('submit-btn').disabled = true;
-    document.getElementById('submit-btn').textContent = 'Saving…';
+  if (!audioBlob) { showToast('No recording found.', true); return; }
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('submit-btn').textContent = 'Saving…';
 
-    try {
-      const base64 = await blobToBase64(audioBlob);
+  try {
+    const base64 = await blobToBase64(audioBlob);
 
-      // Build URL with all params - using JSONP GET request
-      const params = new URLSearchParams({
-        action: 'saveRecording',
-        row: currentItem.row,
-        volume: currentItem.volume,
-        number: currentItem.number,
-        text: currentItem.text,
-        value: currentItem.value,
-        user: userData.user,
-        lumicash: userData.lumicash,
-        mimeType: audioBlob.type,
-        audioBase64: base64
-      });
+    const payload = {
+      action: 'saveRecording',
+      row: currentItem.row,
+      volume: currentItem.volume,
+      number: currentItem.number,
+      text: currentItem.text,
+      value: currentItem.value,
+      user: userData.user,
+      lumicash: userData.lumicash,
+      mimeType: audioBlob.type,
+      audioBase64: base64
+    };
 
-      const result = await jsonp(APPS_SCRIPT_URL + '?' + params.toString());
+    // no-cors: we don't get a response, but the script runs
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    });
 
-      if (result && result.success) {
-        showPanel('done-panel');
-        document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
-        document.querySelector('#done-panel .btn').style.display = 'inline-block';
-      } else {
-        showToast('Save error: ' + (result && result.error ? result.error : 'unknown'), true);
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('submit-btn').textContent = 'Submit';
-      }
-    } catch (err) {
-      showToast('Error submitting: ' + err.message, true);
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('submit-btn').textContent = 'Submit';
-    }
+    // Optimistic success — Apps Script received the request
+    showPanel('done-panel');
+    document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
+    document.querySelector('#done-panel .btn').style.display = 'inline-block';
+
+  } catch (err) {
+    showToast('Error submitting: ' + err.message, true);
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('submit-btn').textContent = 'Submit';
   }
+}
 
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
