@@ -6,7 +6,6 @@
 <title>VoiceRecorder 2.0</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: #f4f6f9;
@@ -17,7 +16,6 @@
     justify-content: center;
     padding: 20px;
   }
-
   .card {
     background: #fff;
     border-radius: 16px;
@@ -26,103 +24,46 @@
     width: 100%;
     max-width: 640px;
   }
-
   h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
   .subtitle { font-size: 13px; color: #888; margin-bottom: 28px; }
-
-  /* Panels */
   .panel { display: none; }
   .panel.active { display: block; }
-
-  /* Setup */
   .field { margin-bottom: 16px; }
   label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
   input[type="text"], input[type="tel"] {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid #ddd;
-    border-radius: 8px;
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid #ddd; border-radius: 8px;
+    font-size: 15px; outline: none; transition: border-color 0.2s;
   }
   input:focus { border-color: #4f8ef7; }
-
-  /* Meta badges */
   .meta-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .badge {
-    background: #eef3ff;
-    color: #4f8ef7;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-  }
+  .badge { background: #eef3ff; color: #4f8ef7; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
   .badge.value { background: #e8f5e9; color: #388e3c; }
-
-  /* Text box */
   .text-box {
-    background: #f8f9fc;
-    border: 1.5px solid #e8eaf0;
-    border-radius: 10px;
-    padding: 16px 18px;
-    font-size: 16px;
-    line-height: 1.7;
-    margin-bottom: 22px;
-    min-height: 80px;
+    background: #f8f9fc; border: 1.5px solid #e8eaf0; border-radius: 10px;
+    padding: 16px 18px; font-size: 16px; line-height: 1.7;
+    margin-bottom: 22px; min-height: 80px;
   }
-
-  /* Record controls */
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 18px;
-  }
-
+  .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
   .btn-record {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: #e53935;
-    color: #fff;
-    font-size: 22px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.2s;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background: #e53935; color: #fff; font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.2s;
   }
   .btn-record:hover { background: #c62828; }
   .btn-record.recording { background: #b71c1c; animation: pulse 1.2s infinite; }
   .btn-record:disabled { background: #ccc; cursor: not-allowed; animation: none; }
-
   @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); }
     50% { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
   }
-
-  .timer {
-    font-size: 28px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 1px;
-  }
+  .timer { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
   .status-label { font-size: 13px; color: #888; margin-top: 2px; }
-
   audio { width: 100%; margin-bottom: 16px; border-radius: 8px; display: none; }
-
-  /* Buttons */
   .btn {
-    padding: 11px 24px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: background 0.15s;
+    padding: 11px 24px; border-radius: 8px; font-size: 15px;
+    font-weight: 500; border: none; cursor: pointer; transition: background 0.15s;
   }
   .btn-primary { background: #4f8ef7; color: #fff; }
   .btn-primary:hover { background: #2e74e8; }
@@ -130,35 +71,22 @@
   .btn-secondary { background: #f0f2f5; color: #444; }
   .btn-secondary:hover { background: #e2e5ea; }
   .btn-full { width: 100%; margin-top: 8px; }
-
   .action-row { display: flex; gap: 10px; }
-
-  /* Done */
   #done-panel { text-align: center; }
   .done-icon { font-size: 48px; margin-bottom: 12px; }
   .done-text { font-size: 17px; color: #444; margin-bottom: 24px; }
-
-  /* Toast */
   #toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
+    position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(80px);
-    background: #1a1a2e;
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: transform 0.3s;
-    z-index: 999;
-    white-space: nowrap;
+    background: #1a1a2e; color: #fff; padding: 12px 24px;
+    border-radius: 8px; font-size: 14px; transition: transform 0.3s;
+    z-index: 999; white-space: nowrap;
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
   #toast.error { background: #c62828; }
 </style>
 </head>
 <body>
-
 <div class="card">
   <h1>VoiceRecorder 2.0</h1>
   <p class="subtitle">Kirundi Audio Collection</p>
@@ -183,8 +111,7 @@
       <span class="badge" id="meta-number"></span>
       <span class="badge value" id="meta-value"></span>
     </div>
-    <div class="text-box" id="text-display"></div>
-
+    <div class="text-box" id="text-display">Loading…</div>
     <div class="controls">
       <button class="btn-record" id="rec-btn" onclick="toggleRecord()">&#9679;</button>
       <div>
@@ -192,9 +119,7 @@
         <div class="status-label" id="status-label">Press to record</div>
       </div>
     </div>
-
     <audio id="audio-preview" controls></audio>
-
     <div class="action-row">
       <button class="btn btn-primary" id="submit-btn" onclick="submitRecording()" disabled>Submit</button>
       <button class="btn btn-secondary" onclick="discardRecording()">Discard &amp; Re-record</button>
@@ -212,10 +137,7 @@
 <div id="toast"></div>
 
 <script>
-  // ── CONFIGURATION ──────────────────────────────────────────────────────────
-  // Paste your deployed Apps Script Web App URL here:
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyhYeoRSawkpqczzh4qz-D8PmS4gGaKL0McuI6JSG0yoHx6EJZOBGSLi5av1Xgcqysrg/exec';
-  // ──────────────────────────────────────────────────────────────────────────
 
   let userData = {};
   let currentItem = null;
@@ -226,19 +148,34 @@
   let seconds = 0;
   let isRecording = false;
 
+  // ── JSONP helper ────────────────────────────────────────────────────────────
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cbName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const script = document.createElement('script');
+      const sep = url.includes('?') ? '&' : '?';
+      script.src = url + sep + 'callback=' + cbName;
+      script.onerror = () => { cleanup(); reject(new Error('JSONP script error')); };
+      window[cbName] = (data) => { cleanup(); resolve(data); };
+      function cleanup() { delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+      document.head.appendChild(script);
+    });
+  }
+
+  // ── UI helpers ──────────────────────────────────────────────────────────────
   function showPanel(id) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  function showToast(msg, isError = false) {
+  function showToast(msg, isError) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'show' + (isError ? ' error' : '');
     setTimeout(() => { t.className = ''; }, 3500);
   }
 
-  // ── Session start ──────────────────────────────────────────────────────────
+  // ── Session ─────────────────────────────────────────────────────────────────
   function startSession() {
     const name = document.getElementById('user-name').value.trim();
     const lumi = document.getElementById('lumicash').value.trim();
@@ -247,49 +184,37 @@
     loadNextItem();
   }
 
-  // ── Load next item ─────────────────────────────────────────────────────────
-  function jsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cb = 'cb_' + Math.random().toString(36).slice(2);
-    const script = document.createElement('script');
-    script.src = url + '&callback=' + cb;
-    window[cb] = (data) => { delete window[cb]; script.remove(); resolve(data); };
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-}
+  // ── Load next item ──────────────────────────────────────────────────────────
+  async function loadNextItem() {
+    showPanel('record-panel');
+    document.getElementById('text-display').textContent = 'Loading…';
+    resetRecorder();
 
-async function loadNextItem() {
-  showPanel('record-panel');
-  document.getElementById('text-display').textContent = 'Loading…';
-  resetRecorder();
-
-  try {
-    const item = await jsonp(`${APPS_SCRIPT_URL}?action=getNextItem`);
-    if (!item || item.error) {
-      showPanel('done-panel');
-      document.getElementById('done-msg').textContent = 'All done — no more items available.';
-      document.querySelector('#done-panel .btn').style.display = 'none';
-      return;
+    try {
+      const item = await jsonp(APPS_SCRIPT_URL + '?action=getNextItem');
+      if (!item || item.done || item.error) {
+        showPanel('done-panel');
+        document.getElementById('done-msg').textContent = item && item.error
+          ? 'Error: ' + item.error
+          : 'All done — no more items available.';
+        document.querySelector('#done-panel .btn').style.display = 'none';
+        return;
+      }
+      currentItem = item;
+      document.getElementById('meta-volume').textContent = item.volume;
+      document.getElementById('meta-number').textContent = '#' + item.number;
+      document.getElementById('meta-value').textContent = item.value + ' BIF';
+      document.getElementById('text-display').textContent = item.text;
+    } catch (err) {
+      showToast('Failed to load item: ' + err.message, true);
+      document.getElementById('text-display').textContent = 'Error loading item.';
     }
-    currentItem = item;
-    document.getElementById('meta-volume').textContent = item.volume;
-    document.getElementById('meta-number').textContent = '#' + item.number;
-    document.getElementById('meta-value').textContent = item.value + ' BIF';
-    document.getElementById('text-display').textContent = item.text;
-  } catch (err) {
-    showToast('Failed to load item. Check your connection.', true);
-    document.getElementById('text-display').textContent = 'Error loading item.';
   }
-}
 
-  // ── Recorder controls ──────────────────────────────────────────────────────
+  // ── Recorder ────────────────────────────────────────────────────────────────
   function resetRecorder() {
-    if (mediaRecorder && isRecording) mediaRecorder.stop();
-    audioBlob = null;
-    audioChunks = [];
-    isRecording = false;
-    seconds = 0;
+    if (mediaRecorder && isRecording) { try { mediaRecorder.stop(); } catch(e) {} }
+    audioBlob = null; audioChunks = []; isRecording = false; seconds = 0;
     clearInterval(timerInterval);
     document.getElementById('timer').textContent = '0:00';
     document.getElementById('status-label').textContent = 'Press to record';
@@ -298,43 +223,32 @@ async function loadNextItem() {
     document.getElementById('submit-btn').disabled = true;
     document.getElementById('submit-btn').textContent = 'Submit';
     const ap = document.getElementById('audio-preview');
-    ap.src = '';
-    ap.style.display = 'none';
+    ap.src = ''; ap.style.display = 'none';
   }
 
   function discardRecording() { resetRecorder(); }
 
   async function toggleRecord() {
-    if (isRecording) {
-      mediaRecorder.stop();
-      return;
-    }
-
+    if (isRecording) { mediaRecorder.stop(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunks = [];
-
-      // Prefer mp4/aac on iOS Safari, fall back to webm
       const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
-                     : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
-                     : '';
+                     : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
       mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-
       mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
         audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
         const url = URL.createObjectURL(audioBlob);
         const ap = document.getElementById('audio-preview');
-        ap.src = url;
-        ap.style.display = 'block';
+        ap.src = url; ap.style.display = 'block';
         document.getElementById('submit-btn').disabled = false;
         document.getElementById('status-label').textContent = 'Review & submit';
         isRecording = false;
         clearInterval(timerInterval);
         document.getElementById('rec-btn').classList.remove('recording');
       };
-
       mediaRecorder.start();
       isRecording = true;
       seconds = 0;
@@ -346,13 +260,12 @@ async function loadNextItem() {
         const s = String(seconds % 60).padStart(2, '0');
         document.getElementById('timer').textContent = m + ':' + s;
       }, 1000);
-
     } catch (err) {
       showToast('Microphone access denied. Please allow microphone and reload.', true);
     }
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
+  // ── Submit ───────────────────────────────────────────────────────────────────
   async function submitRecording() {
     if (!audioBlob) { showToast('No recording found.', true); return; }
     document.getElementById('submit-btn').disabled = true;
@@ -361,7 +274,8 @@ async function loadNextItem() {
     try {
       const base64 = await blobToBase64(audioBlob);
 
-      const payload = {
+      // Build URL with all params - using JSONP GET request
+      const params = new URLSearchParams({
         action: 'saveRecording',
         row: currentItem.row,
         volume: currentItem.volume,
@@ -370,33 +284,28 @@ async function loadNextItem() {
         value: currentItem.value,
         user: userData.user,
         lumicash: userData.lumicash,
-        audioBase64: base64,
-        mimeType: audioBlob.type
-      };
-
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
+        mimeType: audioBlob.type,
+        audioBase64: base64
       });
-      const result = await res.json();
 
-      if (result.success) {
+      const result = await jsonp(APPS_SCRIPT_URL + '?' + params.toString());
+
+      if (result && result.success) {
         showPanel('done-panel');
         document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
         document.querySelector('#done-panel .btn').style.display = 'inline-block';
       } else {
-        showToast('Save error: ' + (result.error || 'unknown'), true);
+        showToast('Save error: ' + (result && result.error ? result.error : 'unknown'), true);
         document.getElementById('submit-btn').disabled = false;
         document.getElementById('submit-btn').textContent = 'Submit';
       }
     } catch (err) {
-      showToast('Network error. Please try again.', true);
+      showToast('Error submitting: ' + err.message, true);
       document.getElementById('submit-btn').disabled = false;
       document.getElementById('submit-btn').textContent = 'Submit';
     }
   }
 
-  // ── Utility ────────────────────────────────────────────────────────────────
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
