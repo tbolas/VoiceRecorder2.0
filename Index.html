@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceRecorder 2.0</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f6f9;
+    color: #1a1a2e;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 28px; }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Setup */
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+  input[type="text"], input[type="tel"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: #4f8ef7; }
+
+  /* Meta badges */
+  .meta-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .badge {
+    background: #eef3ff;
+    color: #4f8ef7;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .badge.value { background: #e8f5e9; color: #388e3c; }
+
+  /* Text box */
+  .text-box {
+    background: #f8f9fc;
+    border: 1.5px solid #e8eaf0;
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 22px;
+    min-height: 80px;
+  }
+
+  /* Record controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .btn-record {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: #e53935;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .btn-record:hover { background: #c62828; }
+  .btn-record.recording { background: #b71c1c; animation: pulse 1.2s infinite; }
+  .btn-record:disabled { background: #ccc; cursor: not-allowed; animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
+  }
+
+  .timer {
+    font-size: 28px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+  }
+  .status-label { font-size: 13px; color: #888; margin-top: 2px; }
+
+  audio { width: 100%; margin-bottom: 16px; border-radius: 8px; display: none; }
+
+  /* Buttons */
+  .btn {
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #4f8ef7; color: #fff; }
+  .btn-primary:hover { background: #2e74e8; }
+  .btn-primary:disabled { background: #b0c7f7; cursor: not-allowed; }
+  .btn-secondary { background: #f0f2f5; color: #444; }
+  .btn-secondary:hover { background: #e2e5ea; }
+  .btn-full { width: 100%; margin-top: 8px; }
+
+  .action-row { display: flex; gap: 10px; }
+
+  /* Done */
+  #done-panel { text-align: center; }
+  .done-icon { font-size: 48px; margin-bottom: 12px; }
+  .done-text { font-size: 17px; color: #444; margin-bottom: 24px; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a2e;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.error { background: #c62828; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>VoiceRecorder 2.0</h1>
+  <p class="subtitle">Kirundi Audio Collection</p>
+
+  <!-- Setup -->
+  <div id="setup-panel" class="panel active">
+    <div class="field">
+      <label>Your Name</label>
+      <input type="text" id="user-name" placeholder="e.g. Jean Pierre" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Lumicash Number</label>
+      <input type="tel" id="lumicash" placeholder="e.g. 0799000000" autocomplete="off">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="startSession()">Start Recording</button>
+  </div>
+
+  <!-- Recording -->
+  <div id="record-panel" class="panel">
+    <div class="meta-row">
+      <span class="badge" id="meta-volume"></span>
+      <span class="badge" id="meta-number"></span>
+      <span class="badge value" id="meta-value"></span>
+    </div>
+    <div class="text-box" id="text-display"></div>
+
+    <div class="controls">
+      <button class="btn-record" id="rec-btn" onclick="toggleRecord()">&#9679;</button>
+      <div>
+        <div class="timer" id="timer">0:00</div>
+        <div class="status-label" id="status-label">Press to record</div>
+      </div>
+    </div>
+
+    <audio id="audio-preview" controls></audio>
+
+    <div class="action-row">
+      <button class="btn btn-primary" id="submit-btn" onclick="submitRecording()" disabled>Submit</button>
+      <button class="btn btn-secondary" onclick="discardRecording()">Discard &amp; Re-record</button>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div id="done-panel" class="panel">
+    <div class="done-icon">✅</div>
+    <div class="done-text" id="done-msg">Saved successfully!</div>
+    <button class="btn btn-primary" onclick="loadNextItem()">Next Recording</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── CONFIGURATION ──────────────────────────────────────────────────────────
+  // Paste your deployed Apps Script Web App URL here:
+  const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+  // ──────────────────────────────────────────────────────────────────────────
+
+  let userData = {};
+  let currentItem = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let audioBlob = null;
+  let timerInterval = null;
+  let seconds = 0;
+  let isRecording = false;
+
+  function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (isError ? ' error' : '');
+    setTimeout(() => { t.className = ''; }, 3500);
+  }
+
+  // ── Session start ──────────────────────────────────────────────────────────
+  function startSession() {
+    const name = document.getElementById('user-name').value.trim();
+    const lumi = document.getElementById('lumicash').value.trim();
+    if (!name || !lumi) { showToast('Please fill in your name and Lumicash number.', true); return; }
+    userData = { user: name, lumicash: lumi };
+    loadNextItem();
+  }
+
+  // ── Load next item ─────────────────────────────────────────────────────────
+  async function loadNextItem() {
+    showPanel('record-panel');
+    document.getElementById('text-display').textContent = 'Loading…';
+    resetRecorder();
+
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getNextItem`);
+      const item = await res.json();
+
+      if (!item || item.error) {
+        showPanel('done-panel');
+        document.getElementById('done-msg').textContent = 'All done — no more items available.';
+        document.querySelector('#done-panel .btn').style.display = 'none';
+        return;
+      }
+
+      currentItem = item;
+      document.getElementById('meta-volume').textContent = item.volume;
+      document.getElementById('meta-number').textContent = '#' + item.number;
+      document.getElementById('meta-value').textContent = item.value + ' BIF';
+      document.getElementById('text-display').textContent = item.text;
+    } catch (err) {
+      showToast('Failed to load item. Check your connection.', true);
+      document.getElementById('text-display').textContent = 'Error loading item.';
+    }
+  }
+
+  // ── Recorder controls ──────────────────────────────────────────────────────
+  function resetRecorder() {
+    if (mediaRecorder && isRecording) mediaRecorder.stop();
+    audioBlob = null;
+    audioChunks = [];
+    isRecording = false;
+    seconds = 0;
+    clearInterval(timerInterval);
+    document.getElementById('timer').textContent = '0:00';
+    document.getElementById('status-label').textContent = 'Press to record';
+    document.getElementById('rec-btn').classList.remove('recording');
+    document.getElementById('rec-btn').disabled = false;
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Submit';
+    const ap = document.getElementById('audio-preview');
+    ap.src = '';
+    ap.style.display = 'none';
+  }
+
+  function discardRecording() { resetRecorder(); }
+
+  async function toggleRecord() {
+    if (isRecording) {
+      mediaRecorder.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+
+      // Prefer mp4/aac on iOS Safari, fall back to webm
+      const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
+                     : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+                     : '';
+      mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+        const url = URL.createObjectURL(audioBlob);
+        const ap = document.getElementById('audio-preview');
+        ap.src = url;
+        ap.style.display = 'block';
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('status-label').textContent = 'Review & submit';
+        isRecording = false;
+        clearInterval(timerInterval);
+        document.getElementById('rec-btn').classList.remove('recording');
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      seconds = 0;
+      document.getElementById('rec-btn').classList.add('recording');
+      document.getElementById('status-label').textContent = 'Recording…';
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = Math.floor(seconds / 60);
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = m + ':' + s;
+      }, 1000);
+
+    } catch (err) {
+      showToast('Microphone access denied. Please allow microphone and reload.', true);
+    }
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  async function submitRecording() {
+    if (!audioBlob) { showToast('No recording found.', true); return; }
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Saving…';
+
+    try {
+      const base64 = await blobToBase64(audioBlob);
+
+      const payload = {
+        action: 'saveRecording',
+        row: currentItem.row,
+        volume: currentItem.volume,
+        number: currentItem.number,
+        text: currentItem.text,
+        value: currentItem.value,
+        user: userData.user,
+        lumicash: userData.lumicash,
+        audioBase64: base64,
+        mimeType: audioBlob.type
+      };
+
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        showPanel('done-panel');
+        document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
+        document.querySelector('#done-panel .btn').style.display = 'inline-block';
+      } else {
+        showToast('Save error: ' + (result.error || 'unknown'), true);
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').textContent = 'Submit';
+      }
+    } catch (err) {
+      showToast('Network error. Please try again.', true);
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('submit-btn').textContent = 'Submit';
+    }
+  }
+
+  // ── Utility ────────────────────────────────────────────────────────────────
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+</script>
+</body>
+</html>
