@@ -248,32 +248,40 @@
   }
 
   // ── Load next item ─────────────────────────────────────────────────────────
-  async function loadNextItem() {
-    showPanel('record-panel');
-    document.getElementById('text-display').textContent = 'Loading…';
-    resetRecorder();
+  function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    script.src = url + '&callback=' + cb;
+    window[cb] = (data) => { delete window[cb]; script.remove(); resolve(data); };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
 
-    try {
-      const res = await fetch(`${APPS_SCRIPT_URL}?action=getNextItem`);
-      const item = await res.json();
+async function loadNextItem() {
+  showPanel('record-panel');
+  document.getElementById('text-display').textContent = 'Loading…';
+  resetRecorder();
 
-      if (!item || item.error) {
-        showPanel('done-panel');
-        document.getElementById('done-msg').textContent = 'All done — no more items available.';
-        document.querySelector('#done-panel .btn').style.display = 'none';
-        return;
-      }
-
-      currentItem = item;
-      document.getElementById('meta-volume').textContent = item.volume;
-      document.getElementById('meta-number').textContent = '#' + item.number;
-      document.getElementById('meta-value').textContent = item.value + ' BIF';
-      document.getElementById('text-display').textContent = item.text;
-    } catch (err) {
-      showToast('Failed to load item. Check your connection.', true);
-      document.getElementById('text-display').textContent = 'Error loading item.';
+  try {
+    const item = await jsonp(`${APPS_SCRIPT_URL}?action=getNextItem`);
+    if (!item || item.error) {
+      showPanel('done-panel');
+      document.getElementById('done-msg').textContent = 'All done — no more items available.';
+      document.querySelector('#done-panel .btn').style.display = 'none';
+      return;
     }
+    currentItem = item;
+    document.getElementById('meta-volume').textContent = item.volume;
+    document.getElementById('meta-number').textContent = '#' + item.number;
+    document.getElementById('meta-value').textContent = item.value + ' BIF';
+    document.getElementById('text-display').textContent = item.text;
+  } catch (err) {
+    showToast('Failed to load item. Check your connection.', true);
+    document.getElementById('text-display').textContent = 'Error loading item.';
   }
+}
 
   // ── Recorder controls ──────────────────────────────────────────────────────
   function resetRecorder() {
