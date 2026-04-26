@@ -266,13 +266,18 @@
   }
 
   // ── Submit ───────────────────────────────────────────────────────────────────
-  async function submitRecording() {
+ Let's add some debugging. Replace just the submitRecording function in your index.html with this version that logs what's happening:
+javascriptasync function submitRecording() {
   if (!audioBlob) { showToast('No recording found.', true); return; }
   document.getElementById('submit-btn').disabled = true;
   document.getElementById('submit-btn').textContent = 'Saving…';
 
   try {
+    showToast('Converting audio…');
     const base64 = await blobToBase64(audioBlob);
+    showToast('Audio size: ' + Math.round(base64.length / 1024) + 'KB');
+
+    await new Promise(r => setTimeout(r, 2000)); // let toast show
 
     const payload = {
       action: 'saveRecording',
@@ -287,24 +292,29 @@
       audioBase64: base64
     };
 
-    // no-cors: we don't get a response, but the script runs
-    await fetch(APPS_SCRIPT_URL, {
+    showToast('Sending ' + Math.round(JSON.stringify(payload).length / 1024) + 'KB to server…');
+    await new Promise(r => setTimeout(r, 2000));
+
+    const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       body: JSON.stringify(payload)
     });
 
-    // Optimistic success — Apps Script received the request
+    showToast('Fetch completed, type: ' + response.type);
+    await new Promise(r => setTimeout(r, 2000));
+
     showPanel('done-panel');
     document.getElementById('done-msg').textContent = 'Saved! (' + currentItem.value + ' BIF earned)';
     document.querySelector('#done-panel .btn').style.display = 'inline-block';
 
   } catch (err) {
-    showToast('Error submitting: ' + err.message, true);
+    showToast('Error: ' + err.message + ' | ' + err.name, true);
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('submit-btn').textContent = 'Submit';
   }
 }
+
 
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
