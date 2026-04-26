@@ -268,6 +268,7 @@ function toggleRecord() {
 }
 
 function submitRecording() {
+  alert('submit fired, blob: ' + (audioBlob ? audioBlob.size + ' bytes' : 'NULL'));
   if (!audioBlob) { showToast('No recording found.', true); return; }
   document.getElementById('submit-btn').disabled = true;
   document.getElementById('submit-btn').textContent = 'Saving...';
